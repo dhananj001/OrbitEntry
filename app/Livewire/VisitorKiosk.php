@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Models\KohaPatron;
 use App\Models\Visit;
 use Carbon\Carbon;
 use Livewire\Component;
@@ -9,17 +10,24 @@ use Livewire\Component;
 class VisitorKiosk extends Component
 {
     public string $cardnumber = '';
+
     public ?string $feedbackMessage = null;
+
     public string $feedbackType = ''; // 'checkin', 'checkout', 'error'
+
     public ?string $lastActionCard = null;
+
     public ?string $lastActionTime = null;
-    
+
     // Log controls
     public string $searchQuery = '';
+
     public string $statusFilter = 'all'; // 'all', 'inside', 'completed'
+
     public string $dateFilter = 'today'; // 'today', 'all_time'
+
     public int $perPage = 10;
-    
+
     // Active View Mode
     public string $currentView = 'kiosk'; // 'kiosk', 'analytics'
 
@@ -31,6 +39,7 @@ class VisitorKiosk extends Component
             $this->feedbackType = 'error';
             $this->feedbackMessage = 'Card ID cannot be empty. Please enter or swipe a valid card.';
             $this->dispatch('play-audio', sound: 'error');
+
             return;
         }
 
@@ -39,6 +48,17 @@ class VisitorKiosk extends Component
             ->whereNull('checked_out')
             ->latest('checked_in')
             ->first();
+
+        // Lookup Koha Patron safely (graceful fallback if Koha DB is unreachable)
+        $patron = null;
+        try {
+            $patron = KohaPatron::findByCardNumber($card);
+        } catch (\Throwable) {
+            // Koha DB may be disconnected or testing without secondary DB
+            $patron = null;
+        }
+
+        $visitorDisplayName = $patron ? $patron->display_identifier : "Visitor #{$card}";
 
         if ($activeVisit) {
             // Check out
@@ -50,7 +70,7 @@ class VisitorKiosk extends Component
             $this->feedbackType = 'checkout';
             $this->lastActionCard = $card;
             $this->lastActionTime = now()->format('H:i:s');
-            $this->feedbackMessage = "Visitor #{$card} checked out successfully. Session duration: {$duration}.";
+            $this->feedbackMessage = "{$visitorDisplayName} checked out successfully. Session duration: {$duration}.";
             $this->dispatch('play-audio', sound: 'checkout');
         } else {
             // Check in
@@ -62,7 +82,7 @@ class VisitorKiosk extends Component
             $this->feedbackType = 'checkin';
             $this->lastActionCard = $card;
             $this->lastActionTime = now()->format('H:i:s');
-            $this->feedbackMessage = "Visitor #{$card} checked in successfully. Welcome!";
+            $this->feedbackMessage = "{$visitorDisplayName} checked in successfully. Welcome!";
             $this->dispatch('play-audio', sound: 'checkin');
         }
 
@@ -104,8 +124,8 @@ class VisitorKiosk extends Component
         // 1. Data Query for Visitor Log
         $query = Visit::latest('checked_in');
 
-        if (!empty($this->searchQuery)) {
-            $query->where('cardnumber', 'like', '%' . trim($this->searchQuery) . '%');
+        if (! empty($this->searchQuery)) {
+            $query->where('cardnumber', 'like', '%'.trim($this->searchQuery).'%');
         }
 
         if ($this->statusFilter === 'inside') {
@@ -138,7 +158,7 @@ class VisitorKiosk extends Component
 
         // 3. Deep Analytics Calculations
         $allVisitsToday = Visit::whereDate('checked_in', Carbon::today())->get();
-        
+
         // Hourly traffic breakdown for today (9 AM to 9 PM)
         $hourlyDistribution = [];
         $peakHourName = '—';
@@ -147,7 +167,7 @@ class VisitorKiosk extends Component
         for ($h = 8; $h <= 20; $h++) {
             $label = Carbon::today()->setHour($h)->format('g A');
             $count = $allVisitsToday->filter(function ($v) use ($h) {
-                return (int)$v->checked_in->format('H') === $h;
+                return (int) $v->checked_in->format('H') === $h;
             })->count();
 
             $hourlyDistribution[] = [

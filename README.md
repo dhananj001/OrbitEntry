@@ -43,10 +43,32 @@ Operating entirely on an efficient **single-table architecture**, it provides in
 
 ---
 
-## 🗄️ Database Architecture
+## 🗄️ Database Architecture & Koha ILS Multi-Connection
 
-The system fulfills high-performance tracking using **a single indexed table** (`visits`):
+OrbitEntry utilizes a clean **Multi-Database Architecture**:
 
+1. **Primary Database (`visits` table)**: OrbitEntry's internal database (SQLite or MySQL/PostgreSQL) strictly stores entry/exit timestamps and card transactions.
+2. **Secondary Database (`borrowers` table - Read-Only)**: OrbitEntry connects to an external **Koha Integrated Library System (ILS)** database. When an ID card is scanned, OrbitEntry looks up patron information (Student/Staff full name, department, branch) without storing redundant copies.
+
+```
+       [ Student / Staff Scans ID Card ]
+                      │
+                      ▼
+         ┌─────────────────────────┐
+         │       OrbitEntry        │
+         │     (Visitor Kiosk)     │
+         └────────────┬────────────┘
+                      │
+        ┌─────────────┴─────────────┐
+        │ Reads Patron Details      │ Writes Check-In/Out
+        ▼ (SELECT only)             ▼ (INSERT / UPDATE)
+ ┌──────────────┐            ┌──────────────┐
+ │   Koha DB    │            │ OrbitEntry DB│
+ │ (borrowers)  │            │   (visits)   │
+ └──────────────┘            └──────────────┘
+```
+
+#### OrbitEntry `visits` schema:
 ```sql
 CREATE TABLE visits (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -57,6 +79,19 @@ CREATE TABLE visits (
     updated_at DATETIME
 );
 ```
+
+#### Configuring the Koha Database Connection
+In `.env`:
+```env
+# Koha Database Connection
+DB_KOHA_DRIVER=mariadb
+DB_KOHA_HOST=127.0.0.1
+DB_KOHA_PORT=3306
+DB_KOHA_DATABASE=koha_aec
+DB_KOHA_USERNAME=koha_reader
+DB_KOHA_PASSWORD=secret
+```
+*Note: If the Koha database is not configured or offline, OrbitEntry automatically falls back gracefully and continues recording visits by card number.*
 
 ### Indexed Columns
 - `cardnumber` (fast scan lookup)

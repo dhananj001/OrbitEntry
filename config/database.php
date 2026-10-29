@@ -114,6 +114,36 @@ return [
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
 
+        /*
+        |--------------------------------------------------------------------------
+        | Koha ILS Database Connection (External / Read-Only)
+        |--------------------------------------------------------------------------
+        |
+        | Connects to the external Koha Library Management System database to
+        | query borrower/patron records on badge scan. Can be configured for
+        | MariaDB, MySQL, or SQLite (useful for local development/testing).
+        |
+        */
+        'koha' => [
+            'driver' => env('DB_KOHA_DRIVER', env('DB_CONNECTION') === 'sqlite' ? 'sqlite' : 'mariadb'),
+            'url' => env('DB_KOHA_URL'),
+            'host' => env('DB_KOHA_HOST', '127.0.0.1'),
+            'port' => env('DB_KOHA_PORT', '3306'),
+            'database' => env('DB_KOHA_DATABASE', env('DB_CONNECTION') === 'sqlite' ? database_path('koha.sqlite') : 'koha_aec'),
+            'username' => env('DB_KOHA_USERNAME', 'root'),
+            'password' => env('DB_KOHA_PASSWORD', ''),
+            'unix_socket' => env('DB_KOHA_SOCKET', ''),
+            'charset' => env('DB_KOHA_CHARSET', 'utf8mb4'),
+            'collation' => env('DB_KOHA_COLLATION', 'utf8mb4_unicode_ci'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
+
     ],
 
     /*

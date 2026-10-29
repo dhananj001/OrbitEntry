@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>OrbitEntry &bull; Visitor Management</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/orbitentry-favicon.png') }}">
     
     <!-- Clean Industry Standard Fonts: Inter & Roboto Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

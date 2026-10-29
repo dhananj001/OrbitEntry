@@ -67,11 +67,11 @@
             <div class="flex items-center gap-6">
                 <!-- Brand -->
                 <div class="flex items-center gap-3">
-                    <div class="h-9 w-9 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold shadow-xs">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                        </svg>
-                    </div>
+                    <img 
+                        src="{{ asset('images/orbitentrylogoshorttransparent.png') }}" 
+                        alt="OrbitEntry Logo" 
+                        class="h-11 w-auto object-contain shrink-0"
+                    />
                     <div>
                         <span class="text-base font-semibold text-slate-900 tracking-tight">OrbitEntry</span>
                         <span class="ml-2 px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200">Library Suite</span>
@@ -262,12 +262,12 @@
 
                         <!-- Quick Test Chips -->
                         <div class="mt-6 pt-5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
-                            <span class="text-xs font-medium text-slate-500">Quick Test Cards:</span>
+                            <span class="text-xs font-medium text-slate-500">Quick Test Cards (Koha & General):</span>
                             <div class="flex flex-wrap gap-2">
+                                <button type="button" wire:click="quickScan('SW24CIV001')" class="px-2.5 py-1 text-xs font-mono font-medium rounded-md bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition cursor-pointer" title="Koha Patron: Abhinaya (Student)">#SW24CIV001 (Abhinaya)</button>
+                                <button type="button" wire:click="quickScan('SW24BCA001')" class="px-2.5 py-1 text-xs font-mono font-medium rounded-md bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition cursor-pointer" title="Koha Patron: Ambika Patil (Student)">#SW24BCA001 (Ambika)</button>
+                                <button type="button" wire:click="quickScan('GECW001')" class="px-2.5 py-1 text-xs font-mono font-medium rounded-md bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition cursor-pointer" title="Koha Patron: Admin (Staff)">#GECW001 (Staff Admin)</button>
                                 <button type="button" wire:click="quickScan('LIB-1001')" class="px-2.5 py-1 text-xs font-mono font-medium rounded-md bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 transition cursor-pointer">#LIB-1001</button>
-                                <button type="button" wire:click="quickScan('LIB-1002')" class="px-2.5 py-1 text-xs font-mono font-medium rounded-md bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 transition cursor-pointer">#LIB-1002</button>
-                                <button type="button" wire:click="quickScan('LIB-1003')" class="px-2.5 py-1 text-xs font-mono font-medium rounded-md bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 transition cursor-pointer">#LIB-1003</button>
-                                <button type="button" wire:click="quickScan('STU-8820')" class="px-2.5 py-1 text-xs font-mono font-medium rounded-md bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 transition cursor-pointer">#STU-8820</button>
                             </div>
                         </div>
                     </div>
@@ -347,7 +347,7 @@
                     <table class="w-full text-left text-sm text-slate-700">
                         <thead class="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500 border-b border-slate-200">
                             <tr>
-                                <th scope="col" class="py-3 px-6 font-semibold">Card ID</th>
+                                <th scope="col" class="py-3 px-6 font-semibold">Visitor / Card ID</th>
                                 <th scope="col" class="py-3 px-6 font-semibold">Checked In</th>
                                 <th scope="col" class="py-3 px-6 font-semibold">Checked Out</th>
                                 <th scope="col" class="py-3 px-6 font-semibold">Duration</th>
@@ -358,9 +358,19 @@
                         <tbody class="divide-y divide-slate-100">
                             @forelse ($visits as $visit)
                                 <tr class="hover:bg-slate-50/70 transition">
-                                    <td class="py-3.5 px-6 font-mono font-medium text-slate-900 flex items-center gap-2">
-                                        <span class="w-2 h-2 rounded-full {{ is_null($visit->checked_out) ? 'bg-emerald-500' : 'bg-slate-300' }}"></span>
-                                        <span>{{ $visit->cardnumber }}</span>
+                                    <td class="py-3.5 px-6 font-medium text-slate-900">
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-2 h-2 rounded-full shrink-0 {{ is_null($visit->checked_out) ? 'bg-emerald-500' : 'bg-slate-300' }}"></span>
+                                            <div>
+                                                <div class="font-mono text-xs font-semibold text-slate-900">{{ $visit->cardnumber }}</div>
+                                                @if ($visit->safe_patron)
+                                                    <div class="text-xs text-indigo-700 font-medium flex items-center gap-1.5 mt-0.5">
+                                                        <span>{{ $visit->safe_patron->full_name }}</span>
+                                                        <span class="text-[10px] px-1.5 py-0.2 rounded bg-indigo-50 border border-indigo-200 text-indigo-700">{{ $visit->safe_patron->category_label }}</span>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
                                     </td>
                                     <td class="py-3.5 px-6 text-slate-600 text-xs font-mono">
                                         {{ $visit->checked_in->format('M d, Y · H:i:s') }}
@@ -387,17 +397,34 @@
                                             </span>
                                         @endif
                                     </td>
-                                    <td class="py-3.5 px-6 text-right">
+                                    <td class="py-3 px-6 text-right whitespace-nowrap">
                                         @if (is_null($visit->checked_out))
                                             <button 
                                                 type="button" 
                                                 wire:click="forceCheckout({{ $visit->id }})" 
-                                                class="text-xs font-medium text-slate-600 hover:text-rose-600 px-2 py-1 rounded hover:bg-rose-50 transition cursor-pointer"
+                                                wire:loading.attr="disabled"
+                                                wire:target="forceCheckout({{ $visit->id }})"
+                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-rose-700 bg-rose-50/80 hover:bg-rose-100/90 active:bg-rose-200 border border-rose-200/80 shadow-2xs hover:shadow-xs transition duration-150 cursor-pointer group"
+                                                title="Manually end session for {{ $visit->visitor_name }}"
                                             >
-                                                Check Out
+                                                <!-- Loading Spinner -->
+                                                <svg wire:loading wire:target="forceCheckout({{ $visit->id }})" class="animate-spin w-3.5 h-3.5 text-rose-600" fill="none" viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                                                </svg>
+                                                <!-- Logout / Exit Door Icon -->
+                                                <svg wire:loading.remove wire:target="forceCheckout({{ $visit->id }})" class="w-3.5 h-3.5 text-rose-600 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                                </svg>
+                                                <span>Check Out</span>
                                             </button>
                                         @else
-                                            <span class="text-xs text-slate-400">—</span>
+                                            <span class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-400">
+                                                <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                </svg>
+                                                <span>Departed</span>
+                                            </span>
                                         @endif
                                     </td>
                                 </tr>
@@ -595,13 +622,7 @@
     <footer class="bg-white border-t border-slate-200 py-4 px-6 text-xs text-slate-500 mt-auto">
         <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
             <div>&copy; {{ date('Y') }} OrbitEntry Visitor Management Suite</div>
-            <div class="flex items-center gap-4 text-slate-400">
-                <span>Progressive Loading</span>
-                <span>&bull;</span>
-                <span>SQLite DB</span>
-                <span>&bull;</span>
-                <span>Real-Time Analytics</span>
-            </div>
+            
         </div>
     </footer>
 </div>

@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Visit extends Model
 {
@@ -55,7 +56,7 @@ class Visit extends Model
     public function getDurationAttribute(): string
     {
         $end = $this->checked_out ?? now();
-        $minutes = $this->checked_in->diffInMinutes($end);
+        $minutes = (int) round($this->checked_in->diffInMinutes($end));
 
         if ($minutes < 1) {
             return '< 1 min';
@@ -65,9 +66,37 @@ class Visit extends Model
             return "{$minutes}m";
         }
 
-        $hours = floor($minutes / 60);
+        $hours = intdiv($minutes, 60);
         $remainingMins = $minutes % 60;
 
         return "{$hours}h {$remainingMins}m";
+    }
+
+    /**
+     * Get the borrower/patron associated with this visit from the Koha database.
+     */
+    public function patron(): BelongsTo
+    {
+        return $this->belongsTo(KohaPatron::class, 'cardnumber', 'cardnumber');
+    }
+
+    /**
+     * Safely resolve patron without throwing if Koha database is offline or unreachable.
+     */
+    public function getSafePatronAttribute(): ?KohaPatron
+    {
+        try {
+            return $this->patron;
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    /**
+     * Get the visitor's display name, falling back to cardnumber if Koha patron is not found.
+     */
+    public function getVisitorNameAttribute(): string
+    {
+        return $this->safe_patron?->full_name ?: $this->cardnumber;
     }
 }
